@@ -1,6 +1,6 @@
 # Terminal ASCII Clock
 
-A minute-accurate ASCII clock for the Windows terminal, with a
+A second-accurate ASCII clock for the Windows terminal, with a
 flavor-text box (Scryfall / Bible / ZenQuotes) above it and
 mouse-or-keyboard exit/config buttons below.
 
@@ -8,12 +8,30 @@ mouse-or-keyboard exit/config buttons below.
 
 - Windows, Python 3.9+, a terminal at least **120 columns** wide
   (maximize the window before launching).
-- Install dependencies: `pip install -r requirements.txt`
 
 ## Run
 
+**Option A — global `clock` command (recommended):** install it once as
+an editable package, so `clock.exe` is placed on your Python Scripts
+folder:
+
 ```
-python clock.py
+py -m pip install -e .
+```
+
+Make sure that Scripts folder is on your PATH (a one-time setup; open a
+**new** terminal window afterward for PATH changes to take effect), then
+run it from anywhere with just:
+
+```
+clock
+```
+
+**Option B — no install:** run it directly from this folder instead:
+
+```
+py -m pip install -r requirements.txt
+py clock.py
 ```
 
 ## Layout
@@ -59,6 +77,10 @@ python clock.py
   actually supports them (checked via `blessed`); otherwise the
   text prints plain automatically.
 
+Quoted text is padded off its quote marks by one space (`" like this "`).
+Scryfall flavor text that already carries its own embedded quote marks
+is left as-is rather than double-quoted.
+
 ## Modules
 
 | File                | Responsibility                                   |
@@ -70,6 +92,7 @@ python clock.py
 | `appConfig.py`      | Loads/saves `config.json`, detects Notepad saves   |
 | `textProviders.py`  | Scryfall / bible-api.com / ZenQuotes fetchers      |
 | `winConsoleInput.py`| Raw Windows console mouse + key reading (ctypes)   |
+| `pyproject.toml`    | Packaging: makes `clock` installable as a command  |
 
 ## Notes / assumptions
 
@@ -79,4 +102,4 @@ python clock.py
   macOS/Linux.
 - Function/variable names use camelCase (not the usual PEP 8
   snake_case) as the project's chosen naming convention.
-- The clock updates once per minute; seconds aren't displayed.
+- The clock updates once per second.

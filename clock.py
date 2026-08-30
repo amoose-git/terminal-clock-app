@@ -75,14 +75,15 @@ def buildButtonRows(positions):
 def buildFrame(config, displayText):
     """Builds every visible row of the app as one list of strings.
 
-    Also returns the button hit-boxes and the minute last drawn,
+    Also returns the button hit-boxes and the HH:MM:SS last drawn,
     so the caller knows when a redraw is actually needed.
     """
     quoteLines = layoutBoxes.wrapToBox(displayText)
     flavorBox = layoutBoxes.buildBox(quoteLines, italic=config["italics"], term=term)
 
     now = resolveNow(config["timezone"])
-    digitLines = bigDigits.renderBigTime(now.strftime("%H:%M"))
+    timeString = now.strftime("%H:%M:%S")
+    digitLines = bigDigits.renderBigTime(timeString)
     clockContent = layoutBoxes.centerBlockLines(digitLines)
     clockBox = layoutBoxes.buildBox(clockContent, minHeight=8)
 
@@ -95,7 +96,7 @@ def buildFrame(config, displayText):
     frame.extend([""] * buttons.buttonGapBelowClock)
     frame.extend(buildButtonRows(positions))
 
-    return frame, positions, now.minute
+    return frame, positions, timeString
 
 
 def redraw(frame):
@@ -137,7 +138,7 @@ def main():
     config = appConfig.loadConfig(configPath)
     displayText = textProviders.fetchDisplayText(config["textSource"])
     configMTime = appConfig.getConfigMTime(configPath)
-    frame, positions, lastMinute = buildFrame(config, displayText)
+    frame, positions, lastTimeString = buildFrame(config, displayText)
 
     handle, originalMode = winConsoleInput.enableRawMouseMode()
     try:
@@ -157,16 +158,17 @@ def main():
 
                 newMTime = appConfig.getConfigMTime(configPath)
                 configChanged = newMTime is not None and newMTime != configMTime
-                minuteChanged = resolveNow(config["timezone"]).minute != lastMinute
+                nowTimeString = resolveNow(config["timezone"]).strftime("%H:%M:%S")
+                timeChanged = nowTimeString != lastTimeString
 
                 if configChanged:
                     configMTime = newMTime
                     config = appConfig.loadConfig(configPath)
                     displayText = textProviders.fetchDisplayText(config["textSource"])
-                    frame, positions, lastMinute = buildFrame(config, displayText)
+                    frame, positions, lastTimeString = buildFrame(config, displayText)
                     redraw(frame)
-                elif minuteChanged:
-                    frame, positions, lastMinute = buildFrame(config, displayText)
+                elif timeChanged:
+                    frame, positions, lastTimeString = buildFrame(config, displayText)
                     redraw(frame)
     finally:
         winConsoleInput.restoreConsoleMode(handle, originalMode)

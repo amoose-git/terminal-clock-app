@@ -16,6 +16,22 @@ requestHeaders = {
     "Accept": "application/json",
 }
 
+# characters that count as "this text already has its own
+# quote marks" — checked so padQuote is never stacked on
+# top of text that's already quoted
+openingQuoteChars = ('"', "“", "'", "‘")
+closingQuoteChars = ('"', "”", "'", "’")
+
+
+def padQuote(text):
+    """Wraps text in quote marks, padded off the text by one space."""
+    return f'" {text.strip()} "'
+
+
+def isAlreadyQuoted(text):
+    """True if text already opens and closes with a quote mark."""
+    return text.startswith(openingQuoteChars) and text.endswith(closingQuoteChars)
+
 
 def fetchScryfallFlavor():
     """Gets a random Magic card's flavor text from Scryfall.
@@ -43,8 +59,10 @@ def fetchScryfallFlavor():
         if flavor:
             # flavor_text sometimes already contains its own
             # quote marks and in-world attribution, so it's
-            # shown as-is rather than re-wrapped in quotes.
-            return f'{flavor.strip()}\n\n— {card.get("name", "Unknown card")}'
+            # only padQuote-wrapped when it isn't already quoted.
+            flavor = flavor.strip()
+            displayFlavor = flavor if isAlreadyQuoted(flavor) else padQuote(flavor)
+            return f'{displayFlavor}\n\n— {card.get("name", "Unknown card")}'
     return "No flavored card turned up after several tries — try again."
 
 
@@ -56,7 +74,7 @@ def fetchBibleVerse():
     payload = response.json()["random_verse"]
 
     reference = f'{payload["book"]} {payload["chapter"]}:{payload["verse"]}'
-    return f'"{payload["text"].strip()}"\n— {reference} (ASV)'
+    return f'{padQuote(payload["text"])}\n— {reference} (ASV)'
 
 
 def fetchZenQuote():
@@ -65,7 +83,7 @@ def fetchZenQuote():
     response = requests.get(url, headers=requestHeaders, timeout=requestTimeoutSeconds)
     response.raise_for_status()
     quote = response.json()[0]
-    return f'"{quote["q"]}"\n— {quote["a"]}'
+    return f'{padQuote(quote["q"])}\n— {quote["a"]}'
 
 
 sourceFetchers = {
