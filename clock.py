@@ -59,13 +59,17 @@ def placeText(rowChars, startCol, text):
         rowChars[startCol + offset] = character
 
 
-def buildButtonRows(positions):
-    """Draws the exit/config button rows side by side."""
+def buildButtonRows(positions, rowWidth):
+    """Draws the exit/config button rows side by side.
+
+    positions already holds absolute terminal columns, so these
+    rows are built at full width rather than needing a margin.
+    """
     exitLines = buttons.buildButtonLines("exit")
     configLines = buttons.buildButtonLines("config")
     rows = []
     for rowOffset in range(buttons.buttonHeight):
-        rowChars = [" "] * layoutBoxes.boxWidth
+        rowChars = [" "] * rowWidth
         placeText(rowChars, positions["exit"]["left"], exitLines[rowOffset])
         placeText(rowChars, positions["config"]["left"], configLines[rowOffset])
         rows.append("".join(rowChars))
@@ -78,23 +82,30 @@ def buildFrame(config, displayText):
     Also returns the button hit-boxes and the HH:MM:SS last drawn,
     so the caller knows when a redraw is actually needed.
     """
+    margin = layoutBoxes.computeCenterMargin(term.width, layoutBoxes.boxWidth)
+    indent = " " * margin
+
     quoteLines = layoutBoxes.wrapToBox(displayText)
     flavorBox = layoutBoxes.buildBox(quoteLines, italic=config["italics"], term=term)
 
     now = resolveNow(config["timezone"])
     timeString = now.strftime("%H:%M:%S")
     digitLines = bigDigits.renderBigTime(timeString)
-    clockContent = layoutBoxes.centerBlockLines(digitLines)
-    clockBox = layoutBoxes.buildBox(clockContent, minHeight=8)
+    clockBox = layoutBoxes.buildDoubleWallBox(digitLines, minHeight=16)
 
-    frame = list(flavorBox)
+    frame = ["", ""]  # 2-line gap above the whole UI
+    frame.extend(indent + row for row in flavorBox)
     frame.append("")  # 1-line gap kept between the two boxes
     clockBoxTop = len(frame)
-    frame.extend(clockBox)
+    frame.extend(indent + row for row in clockBox)
 
-    positions = buttons.buttonPositions(clockBoxTop, len(clockBox), layoutBoxes.boxWidth)
+    clockBoxLeft = margin
+    clockBoxRight = margin + layoutBoxes.boxWidth - 1
+    buttonTop = clockBoxTop + len(clockBox) + buttons.buttonGapBelowClock
+    positions = buttons.buttonPositions(clockBoxLeft, clockBoxRight, buttonTop)
+
     frame.extend([""] * buttons.buttonGapBelowClock)
-    frame.extend(buildButtonRows(positions))
+    frame.extend(buildButtonRows(positions, margin + layoutBoxes.boxWidth))
 
     return frame, positions, timeString
 

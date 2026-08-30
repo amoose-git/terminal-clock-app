@@ -6,8 +6,8 @@ mouse-or-keyboard exit/config buttons below.
 
 ## Requirements
 
-- Windows, Python 3.9+, a terminal at least **120 columns** wide
-  (maximize the window before launching).
+- Windows, Python 3.9+, a terminal at least **80 columns** wide
+  (the boxes are centered, so a wider terminal just adds margin).
 
 ## Run
 
@@ -37,18 +37,26 @@ py clock.py
 ## Layout
 
 ```
-+-------------------- flavor text box (120 wide) --------------------+
-                                (1 line gap)
-+-------------------- big-digit clock box (120 wide) -----------------+
-                              (3 line gap)
-   [EXIT]                                                  [CONFIG]
+     +---------------- flavor text box (80 wide, ASCII) ----------------+
+                                  (1 line gap)
+     ┌════════════ double-walled clock box (80 wide) ═══════════════════┐
+     ║  ┌──────────────────────────────────────────────────────────┐   ║
+     ║  │                     the big digits live here              │   ║
+     ║  └──────────────────────────────────────────────────────────┘   ║
+     └════════════════════════════════════════════════════════════════┘
+                                (3 line gap)
+       [EXIT]                                                [CONFIG]
 ```
 
-- Exit button: 18x2, left edge 14 columns from the terminal's left wall.
-- Config button: 18x2, right edge 14 columns in from the box's right wall.
-- Both sit 3 blank lines under the clock box.
-- The flavor box grows downward (pushing the clock box and buttons
-  down with it) if the fetched text needs more than its base height.
+Both boxes are centered in the terminal. The clock box is drawn as two
+nested Unicode-bordered frames one unit apart (`┌─┐│└┘`); the flavor box
+keeps its plain ASCII `+`/`-`/`|` border. Buttons are single-walled
+Unicode boxes (roof, label, floor) 8 columns in from the clock box's own
+left/right edges, 3 blank lines below it.
+
+- The flavor box grows downward if the fetched text needs more than its
+  base height; the clock box grows if the digit font needs more room
+  than its 16-line minimum.
 
 ## Controls
 
@@ -86,7 +94,7 @@ is left as-is rather than double-quoted.
 | File                | Responsibility                                   |
 |---------------------|---------------------------------------------------|
 | `clock.py`          | Entry point, main loop, ties everything together   |
-| `bigDigits.py`      | 7-segment-style big clock glyphs                   |
+| `bigDigits.py`      | Custom digit glyphs as spreadsheet-style cell codes |
 | `layoutBoxes.py`    | Dashed box drawing + text wrapping                 |
 | `buttons.py`        | Button geometry + click hit-testing                |
 | `appConfig.py`      | Loads/saves `config.json`, detects Notepad saves   |

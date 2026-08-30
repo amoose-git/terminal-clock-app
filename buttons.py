@@ -3,29 +3,35 @@ buttons defines the exit/config button boxes: their fixed
 size, where they sit relative to the clock box, and simple
 point-in-rectangle hit testing for mouse clicks.
 """
+import layoutBoxes
 
 buttonWidth = 18
-buttonHeight = 2
+buttonHeight = 3
 buttonGapBelowClock = 3
-leftWallOffset = 14
-rightWallInset = 14
+clockBoxWallInset = 8
 
 
 def buildButtonLines(label):
-    """Draws one 2-line bordered button with a centered label."""
-    top = "+" + "-" * (buttonWidth - 2) + "+"
-    labelRow = "|" + label.upper().center(buttonWidth - 2) + "|"
-    return [top, labelRow]
+    """Draws one fully-walled button (roof, label, floor).
+
+    Reuses buildBox with the clock's Unicode corners, but with
+    no padding so the label sits flush inside a compact box.
+    """
+    return layoutBoxes.buildBox(
+        [label.upper()], width=buttonWidth, minHeight=buttonHeight,
+        chars=layoutBoxes.unicodeBorderChars,
+        horizontalPadding=0, verticalPadding=0,
+    )
 
 
-def buttonPositions(clockBoxTop, clockBoxHeight, clockBoxWidth=120):
+def buttonPositions(clockBoxLeft, clockBoxRight, buttonTop):
     """Computes top-left corners for the exit and config buttons.
 
-    Both sit buttonGapBelowClock blank lines under the clock box.
+    Both are inset clockBoxWallInset characters from the clock
+    box's own left/right edges, buttonTop lines from the top.
     """
-    buttonTop = clockBoxTop + clockBoxHeight + buttonGapBelowClock
-    exitLeft = leftWallOffset
-    configRight = (clockBoxWidth - 1) - rightWallInset
+    exitLeft = clockBoxLeft + clockBoxWallInset
+    configRight = clockBoxRight - clockBoxWallInset
     configLeft = configRight - buttonWidth + 1
     return {
         "exit": {"top": buttonTop, "left": exitLeft},

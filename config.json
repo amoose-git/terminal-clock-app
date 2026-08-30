@@ -1,4 +1,5 @@
 {
+    "_comment": "textSource: scryfall, bible, or zenquotes. timezone: an IANA name, e.g. UTC. italics: true or false.",
     "textSource": "scryfall",
     "timezone": "Australia/Sydney",
     "italics": true
