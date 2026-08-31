@@ -8,6 +8,7 @@ not just straight horizontal/vertical bars.
 """
 
 digitHeight = 10  # shared by every glyph, so rows line up when joined
+digitWidth = 11  # every 0-9 glyph is padded out to this, so digits don't jostle the layout as they change
 fillChar = "█"
 shadowChar = "░"
 
@@ -50,7 +51,7 @@ glyphCells = {
                  "F7", "G7",
                  "C8", "D8", "E8", "F8", "G8", "H8", "I8",
                  "C9", "D9", "E9", "F9", "G9", "H9", "I9"],
-        "shadow": ["G2", "D3", "G3", "D4", "E4", "H4", "H5", "H6", "H7", "J9",
+        "shadow": ["H2", "E3", "H3", "D4", "E4", "H4", "H5", "H6", "H7", "J9",
                    "D10", "E10", "F10", "G10", "H10", "I10", "J10"],
     },
     "2": {
@@ -82,10 +83,10 @@ glyphCells = {
     "4": {
         "fill": ["E1", "F1", "G1", "H1", "D2", "E2", "G2", "H2", "C3", "D3", "G3", "H3",
                  "B4", "C4", "G4", "H4",
-                 "A5", "B5", "C5", "D5", "E5", "F5", "G5", "H5",
-                 "A6", "B6", "C6", "D6", "E6", "F6", "G6", "H6",
+                 "A5", "B5", "C5", "D5", "E5", "F5", "G5", "H5", "I5",
+                 "A6", "B6", "C6", "D6", "E6", "F6", "G6", "H6", "I6",
                  "G7", "H7", "G8", "H8", "G9", "H9"],
-        "shadow": ["F2", "I2", "E3", "I3", "D4", "I4", "I5", "I6", "B7", "C7", "D7", "E7", "F7",
+        "shadow": ["F2", "I2", "E3", "I3", "D4", "I4", "J5", "J6", "B7", "C7", "D7", "E7", "F7",
                    "I7", "I8", "I9", "H10", "I10"],
     },
     "5": {
@@ -170,6 +171,8 @@ def buildGlyphGrid(character):
 
     allCodes = cells["fill"] + cells["shadow"]
     width = max(parseCellCode(code)[1] for code in allCodes) + 1
+    if character.isdigit():
+        width = max(width, digitWidth)
     grid = [[" "] * width for _ in range(digitHeight)]
 
     for code in cells["fill"]:

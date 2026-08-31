@@ -25,6 +25,12 @@ import winConsoleInput
 scriptDir = os.path.dirname(os.path.abspath(__file__))
 configPath = os.path.join(scriptDir, "config.json")
 
+# The clock box is wider than the flavor box's default boxWidth: widened
+# to 90 so the now-uniform 11-wide digits (see bigDigits.digitWidth) fit
+# the inner text width with room to spare, plus a few columns of right buffer.
+clockBoxWidth = 90
+clockRightBuffer = 1
+
 term = Terminal()
 notepadProcess = None
 
@@ -85,27 +91,34 @@ def buildFrame(config, displayText):
     margin = layoutBoxes.computeCenterMargin(term.width, layoutBoxes.boxWidth)
     indent = " " * margin
 
+    # the clock box is wider than the quote box's boxWidth, so nudge the
+    # quote box over by half the difference to center it under the clock
+    # (the clock itself keeps using `indent`, unmoved)
+    quoteBoxOffset = (clockBoxWidth + clockRightBuffer - layoutBoxes.boxWidth) // 2
+    quoteIndent = " " * (margin + quoteBoxOffset)
+
     quoteLines = layoutBoxes.wrapToBox(displayText)
     flavorBox = layoutBoxes.buildBox(quoteLines, italic=config["italics"], term=term)
 
     now = resolveNow(config["timezone"])
     timeString = now.strftime("%H:%M:%S")
     digitLines = bigDigits.renderBigTime(timeString)
-    clockBox = layoutBoxes.buildDoubleWallBox(digitLines, minHeight=16)
+    clockBox = layoutBoxes.buildDoubleWallBox(digitLines, width=clockBoxWidth, minHeight=16,
+                                               rightBuffer=clockRightBuffer)
 
     frame = ["", ""]  # 2-line gap above the whole UI
-    frame.extend(indent + row for row in flavorBox)
+    frame.extend(quoteIndent + row for row in flavorBox)
     frame.append("")  # 1-line gap kept between the two boxes
     clockBoxTop = len(frame)
     frame.extend(indent + row for row in clockBox)
 
     clockBoxLeft = margin
-    clockBoxRight = margin + layoutBoxes.boxWidth - 1
+    clockBoxRight = margin + clockBoxWidth + clockRightBuffer - 1
     buttonTop = clockBoxTop + len(clockBox) + buttons.buttonGapBelowClock
     positions = buttons.buttonPositions(clockBoxLeft, clockBoxRight, buttonTop)
 
     frame.extend([""] * buttons.buttonGapBelowClock)
-    frame.extend(buildButtonRows(positions, margin + layoutBoxes.boxWidth))
+    frame.extend(buildButtonRows(positions, clockBoxRight + 1))
 
     return frame, positions, timeString
 
@@ -143,8 +156,9 @@ def handleInputEvent(event, positions):
 
 def main():
     enableUtf8Console()
-    if term.width < layoutBoxes.boxWidth:
-        sys.exit(f"This clock needs a terminal at least {layoutBoxes.boxWidth} columns wide.")
+    requiredWidth = clockBoxWidth + clockRightBuffer  # the clock box is now the widest element
+    if term.width < requiredWidth:
+        sys.exit(f"This clock needs a terminal at least {requiredWidth} columns wide.")
 
     config = appConfig.loadConfig(configPath)
     displayText = textProviders.fetchDisplayText(config["textSource"])

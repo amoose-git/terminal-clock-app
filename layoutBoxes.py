@@ -43,17 +43,22 @@ def styleLine(line, width, italic, term, horizontalPadding=horizontalPadding):
 
 
 def buildBox(contentLines, width=boxWidth, minHeight=8, italic=False, term=None,
-             chars=None, horizontalPadding=horizontalPadding, verticalPadding=verticalPadding):
+             chars=None, horizontalPadding=horizontalPadding, verticalPadding=verticalPadding,
+             rightBuffer=0):
     """Builds a full box (top/bottom + padded sides).
 
     contentLines are already-wrapped text rows; the box grows
     taller than minHeight if there are more lines than it can hold.
     chars picks the corner/edge glyphs (defaults to plain ASCII).
+    rightBuffer adds extra blank columns before the right wall only -
+    content is still centered against the original width, so this
+    doesn't shift anything, it just pads the right side further out.
     """
     chars = chars or asciiBorderChars
-    topBorder = chars["tl"] + chars["h"] * (width - 2) + chars["tr"]
-    bottomBorder = chars["bl"] + chars["h"] * (width - 2) + chars["br"]
-    blank = chars["v"] + " " * (width - 2) + chars["v"]
+    outerWidth = width + rightBuffer
+    topBorder = chars["tl"] + chars["h"] * (outerWidth - 2) + chars["tr"]
+    bottomBorder = chars["bl"] + chars["h"] * (outerWidth - 2) + chars["br"]
+    blank = chars["v"] + " " * (outerWidth - 2) + chars["v"]
 
     minContentRows = max(minHeight - 2 - (verticalPadding * 2), 0)
     contentRows = max(len(contentLines), minContentRows)
@@ -66,29 +71,35 @@ def buildBox(contentLines, width=boxWidth, minHeight=8, italic=False, term=None,
     for line in contentLines:
         styled = styleLine(line, width, italic, term, horizontalPadding)
         rows.append(chars["v"] + " " * horizontalPadding + styled +
-                     " " * horizontalPadding + chars["v"])
+                     " " * horizontalPadding + " " * rightBuffer + chars["v"])
     rows += [blank] * bottomBlanks
     rows += [blank] * verticalPadding + [bottomBorder]
     return rows
 
 
-def buildDoubleWallBox(contentLines, width=boxWidth, minHeight=8, italic=False, term=None):
+def buildDoubleWallBox(contentLines, width=boxWidth, minHeight=8, italic=False, term=None,
+                        rightBuffer=0):
     """Draws a 'double-walled' box: an inner Unicode box inset by
     exactly one line inside an outer one vertically (no blank
     buffer row between the two walls), and one character narrower
-    than that horizontally (a 1-column gap shows on the right).
+    than that horizontally.
+    
+    rightBuffer widens both walls by the same amount, purely as
+    extra clearance on the right of the content (see buildBox).
     """
     innerWidth = width - 3
     innerMinHeight = minHeight - 2
     innerBox = buildBox(contentLines, width=innerWidth, minHeight=innerMinHeight,
-                         italic=italic, term=term, chars=unicodeBorderChars)
+                         italic=italic, term=term, chars=unicodeBorderChars,
+                         rightBuffer=rightBuffer)
 
     chars = unicodeBorderChars
-    outerTop = chars["tl"] + chars["h"] * (width - 2) + chars["tr"]
-    outerBottom = chars["bl"] + chars["h"] * (width - 2) + chars["br"]
+    outerWidth = width + rightBuffer
+    outerTop = chars["tl"] + chars["h"] * (outerWidth - 3) + chars["tr"]
+    outerBottom = chars["bl"] + chars["h"] * (outerWidth - 3) + chars["br"]
 
     rows = [outerTop]
-    rows += [chars["v"] + innerRow + " " + chars["v"] for innerRow in innerBox]
+    rows += [chars["v"] + innerRow + chars["v"] for innerRow in innerBox]
     rows.append(outerBottom)
     return rows
 
