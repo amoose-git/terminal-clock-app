@@ -5,13 +5,13 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "terminal-ascii-clock"
 version = "1.0.0"
-description = "A second-accurate ASCII clock for the Windows terminal"
+description = "A second-accurate ASCII clock for the terminal, extensible with split-screen panels"
 requires-python = ">=3.9"
-dependencies = ["requests>=2.31", "blessed>=1.20", "tzdata>=2024.1"]
+dependencies = ["requests>=2.31", "tzdata>=2024.1", "prompt_toolkit>=3.0.50"]
 
 [project.scripts]
-clock = "clock:main"
+clock = "app:main"
 
 [tool.setuptools]
-py-modules = ["clock", "bigDigits", "layoutBoxes", "buttons",
-              "appConfig", "textProviders", "winConsoleInput"]
+py-modules = ["app", "layoutBoxes", "appConfig"]
+packages = ["panels", "clock"]

@@ -1,6 +1,7 @@
 {
-    "_comment": "textSource: scryfall, bible, or zenquotes. timezone: an IANA name, e.g. UTC. italics: true or false.",
+    "_comment": "textSource: scryfall, bible, or zenquotes. timezone: an IANA name, e.g. UTC. italics: true or false. panelWeights: relative split-screen widths per panel name, e.g. {\"todo\": 60, \"clock\": 40} - panels left out default to 50.",
     "textSource": "bible",
     "timezone": "Australia/Sydney",
-    "italics": true
+    "italics": true,
+    "panelWeights": {}
 }

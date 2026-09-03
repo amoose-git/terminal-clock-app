@@ -31,45 +31,38 @@ def wrapToBox(text, width=boxWidth):
     return wrapped
 
 
-def styleLine(line, width, italic, term, horizontalPadding=horizontalPadding):
-    """Pads a line to full width first, then italicises it.
-
-    Padding first keeps escape codes out of the column math.
-    """
-    padded = line.center(innerTextWidth(width, horizontalPadding))
-    if italic and term is not None:
-        return term.italic(padded)
-    return padded
+def styleLine(line, width, horizontalPadding=horizontalPadding):
+    """Pads a line to the box's full inner width, centered.
+    Styling (e.g. italics) is the caller's job, not this function's."""
+    return line.center(innerTextWidth(width, horizontalPadding))
 
 
-def buildBox(contentLines, width=boxWidth, minHeight=8, italic=False, term=None,
+def buildBox(contentLines, width=boxWidth, minHeight=8,
              chars=None, horizontalPadding=horizontalPadding, verticalPadding=verticalPadding,
-             rightBuffer=0):
-    """Builds a full box (top/bottom + padded sides).
-
-    contentLines are already-wrapped text rows; the box grows
-    taller than minHeight if there are more lines than it can hold.
-    chars picks the corner/edge glyphs (defaults to plain ASCII).
-    rightBuffer adds extra blank columns before the right wall only -
-    content is still centered against the original width, so this
-    doesn't shift anything, it just pads the right side further out.
-    """
+             rightBuffer=0, align="center"):
+    """Builds a full box (top/bottom + padded sides) from already-wrapped
+    contentLines; chars picks the corner/edge glyphs (default: plain ASCII).
+    align picks where the leftover space (minHeight beyond contentLines)
+    goes: "center" (default, split top/bottom) or "top" (all of it below)."""
     chars = chars or asciiBorderChars
+
+    # the three border/blank row strings every other row is built from
     outerWidth = width + rightBuffer
     topBorder = chars["tl"] + chars["h"] * (outerWidth - 2) + chars["tr"]
     bottomBorder = chars["bl"] + chars["h"] * (outerWidth - 2) + chars["br"]
     blank = chars["v"] + " " * (outerWidth - 2) + chars["v"]
 
+    # grows past minHeight if contentLines has more rows than it can hold
     minContentRows = max(minHeight - 2 - (verticalPadding * 2), 0)
     contentRows = max(len(contentLines), minContentRows)
     extraBlanks = contentRows - len(contentLines)
-    topBlanks = extraBlanks // 2
+    topBlanks = 0 if align == "top" else extraBlanks // 2
     bottomBlanks = extraBlanks - topBlanks
 
     rows = [topBorder] + [blank] * verticalPadding
     rows += [blank] * topBlanks
     for line in contentLines:
-        styled = styleLine(line, width, italic, term, horizontalPadding)
+        styled = styleLine(line, width, horizontalPadding)
         rows.append(chars["v"] + " " * horizontalPadding + styled +
                      " " * horizontalPadding + " " * rightBuffer + chars["v"])
     rows += [blank] * bottomBlanks
@@ -77,22 +70,16 @@ def buildBox(contentLines, width=boxWidth, minHeight=8, italic=False, term=None,
     return rows
 
 
-def buildDoubleWallBox(contentLines, width=boxWidth, minHeight=8, italic=False, term=None,
-                        rightBuffer=0):
-    """Draws a 'double-walled' box: an inner Unicode box inset by
-    exactly one line inside an outer one vertically (no blank
-    buffer row between the two walls), and one character narrower
-    than that horizontally.
-    
-    rightBuffer widens both walls by the same amount, purely as
-    extra clearance on the right of the content (see buildBox).
-    """
+def buildDoubleWallBox(contentLines, width=boxWidth, minHeight=8, rightBuffer=0):
+    """Draws a 'double-walled' box: an inner Unicode box inset one line
+    inside an outer one, one character narrower than that horizontally."""
     innerWidth = width - 3
     innerMinHeight = minHeight - 2
     innerBox = buildBox(contentLines, width=innerWidth, minHeight=innerMinHeight,
-                         italic=italic, term=term, chars=unicodeBorderChars,
-                         rightBuffer=rightBuffer)
+                         chars=unicodeBorderChars, rightBuffer=rightBuffer)
 
+    # the outer wall wraps the inner box's rows exactly, one wall-width
+    # narrower than a regular border since it has no padding of its own
     chars = unicodeBorderChars
     outerWidth = width + rightBuffer
     outerTop = chars["tl"] + chars["h"] * (outerWidth - 3) + chars["tr"]

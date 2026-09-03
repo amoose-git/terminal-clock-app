@@ -169,6 +169,8 @@ def buildGlyphGrid(character):
     if not cells:
         return [" "] * digitHeight
 
+    # width fits the glyph's own widest cell, but never shrinks a digit
+    # below digitWidth - keeps digits from jostling the layout as they change
     allCodes = cells["fill"] + cells["shadow"]
     width = max(parseCellCode(code)[1] for code in allCodes) + 1
     if character.isdigit():

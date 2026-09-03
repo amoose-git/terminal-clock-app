@@ -9,6 +9,7 @@ defaultConfig = {
     "textSource": "scryfall",
     "timezone": "Australia/Sydney",
     "italics": True,
+    "panelWeights": {},
 }
 
 validSources = ("scryfall", "bible", "zenquotes")

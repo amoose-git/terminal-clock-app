@@ -34,11 +34,8 @@ def isAlreadyQuoted(text):
 
 
 def fetchScryfallFlavor():
-    """Gets a random Magic card's flavor text from Scryfall.
-
-    Not every card has flavor text, and a request can fail
-    transiently, so a few random cards are tried before giving up.
-    """
+    """Gets a random Magic card's flavor text from Scryfall, trying a
+    few random cards since not every card has flavor text."""
     url = "https://api.scryfall.com/cards/random"
     for _ in range(maxScryfallAttempts):
         try:
@@ -57,9 +54,8 @@ def fetchScryfallFlavor():
                     break
 
         if flavor:
-            # flavor_text sometimes already contains its own
-            # quote marks and in-world attribution, so it's
-            # only padQuote-wrapped when it isn't already quoted.
+            # flavor_text sometimes already carries its own quote marks,
+            # so it's only padQuote-wrapped when it isn't already quoted.
             flavor = flavor.strip()
             displayFlavor = flavor if isAlreadyQuoted(flavor) else padQuote(flavor)
             return f'{displayFlavor}\n\n— {card.get("name", "Unknown card")}'
